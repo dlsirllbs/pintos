@@ -9,3 +9,12 @@ The course instructor ([Ryan Huang](huang@cs.jhu.edu)) made some changes to the 
 Pintos labs to tailor for his class. The upstream for this branch comes from 
 https://github.com/ryanphuang/PintosM.git. For students in the class, please
 download the release version for this branch at https://github.com/jhu-cs318/pintos.git
+
+
+#### 相关项目
+
+* [pintos](http://gitee.com/ctguhzy/pintos) 一个教学用的32位操作系统
+
+* [osutils](http://gitee.com/ctguhzy/osutils) pintos系统所需的工具链源码包及编译脚本
+
+* [OSToolChain](http://gitee.com/ctguhzy/OSToolChain) 已编译好可直接在Ubuntu 16.04和Ubuntu 18.04下使用的工具链程序集和bochs虚拟机程序 
