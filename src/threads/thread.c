@@ -159,6 +159,15 @@ void thread_sleep(int64_t ticks)
 }
 // ALARM CLOCK FIN
 
+// Priority BEG
+bool cmp_priority(struct list_elem * a, struct list_elem * b){
+  const struct thread *thread_a = list_entry (a, struct thread, elem);
+  const struct thread *thread_b = list_entry (b, struct thread, elem);
+  
+  return thread_a->priority > thread_b->priority;
+}
+// Priority FIN
+
 /* Starts preemptive thread scheduling by enabling interrupts.
    Also creates the idle thread. */
 void
@@ -258,7 +267,15 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
+  // Priority
   thread_unblock (t);
+
+  /* compare the priorities of the currently running thread and the newly inserted one. 
+  Yield the CPU if the newly arriving thread has higher priority*/
+  struct thread *cur = thread_current (); // get the current thread
+  if (cur->priority < priority){
+    thread_yield ();
+  }
 
   return tid;
 }
@@ -296,7 +313,9 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  // list_push_back (&ready_list, &t->elem);
+  // Priority
+  list_insert_ordered (& ready_list, & t->elem, cmp_priority, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -367,7 +386,8 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    // list_push_back (&ready_list, &cur->elem);
+    list_insert_ordered (& ready_list, & cur->elem, cmp_priority, NULL);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -390,12 +410,33 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+//Priority
+/*
+FUNCTION
+REORDER THE READY LIST
+*/
+/* 对 ready_list 进行重新排序 */
+void
+reOrder (void)
+{
+  enum intr_level old_level = intr_disable ();
+  list_sort (&ready_list, cmp_priority, NULL);
+  intr_set_level (old_level);
+}
+
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+  // Priority
+  /* re-order the readylist according to the priority */
+  if (!list_empty (&ready_list)){
+    reOrder();
+  }
 }
+
 
 /* Returns the current thread's priority. */
 int
