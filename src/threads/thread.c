@@ -28,6 +28,10 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+// ALARM CLOCK
+struct list sleep_list; /* global variable sleep_list for list of sleeping threads */
+int64_t global_ticks; /* the minimus ticks in local ticks */
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -92,6 +96,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&sleep_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -99,6 +104,60 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
 }
+
+// ALARM CLOCK
+/*
+  FUNCTION
+  It iterates through the sleep list and find the minumum tick
+  NOTE: you need to transform the list_item form listitem structure into thread structure(IN list.h) 
+*/
+int64_t find_minimum_tick(){
+  struct list_elem* e = list_begin(&sleep_list);
+  struct thread *t = list_entry (e, struct thread, elem);
+  int64_t min = t->wakeup_ticks;
+  
+  for (e = list_begin (&sleep_list); e != list_end (&sleep_list);
+           e = list_next (e))
+        {
+          struct thread *t = list_entry (e, struct thread, elem);
+          // ...do something with f...
+          if (t->wakeup_ticks < min)
+            min = t->wakeup_ticks;
+        }
+
+  return min;
+}
+
+/*
+  FUNCTION
+  It call the find_minimum_tick() and update the global ticks
+*/
+void update_global_ticks(){
+  if (!list_empty(&sleep_list)){
+      global_ticks = find_minimum_tick();
+  }
+}
+
+/*
+  FUNCTION
+  It sets the thread states to BLOCKED and wait after insert it to sleep queue
+*/
+void thread_sleep(int64_t ticks)
+{
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  
+  old_level = intr_disable (); // 阻止中断，保证操作sleep列表时的原子性
+  if (cur != idle_thread){
+    cur -> status = THREAD_BLOCKED;
+    cur -> wakeup_ticks = ticks;
+    list_push_back (&sleep_list, &cur -> elem);
+  };
+  update_global_ticks();
+  schedule ();
+  intr_set_level (old_level);
+}
+// ALARM CLOCK FIN
 
 /* Starts preemptive thread scheduling by enabling interrupts.
    Also creates the idle thread. */

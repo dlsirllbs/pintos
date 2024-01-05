@@ -133,7 +133,37 @@ pintos_init (void)
     /* Run actions specified on kernel command line. */
     run_actions (argv);
   } else {
-    // TODO: no command line passed to kernel. Run interactively 
+   // 实现内核级监视器
+  char command[100];  // 假设命令长度不超过 100 个字符
+  int index = 0;
+
+  while (true) {
+    printf("OS2021> ");
+    memset(command, 0, sizeof(command)); // 清除之前的命令
+    index = 0;
+
+    char ch;
+    while ((ch = input_getc()) != '\n') {
+      if (ch >= ' ' && ch <= '~') { // 判断是否为可打印字符
+        command[index++] = ch;
+        putchar(ch); // 显示字符
+      }
+      if (index >= 99) break; // 防止溢出
+    }
+
+    command[index] = '\0'; // 确保字符串结尾
+
+    printf("\n");
+
+    // 处理命令
+    if (strcmp(command, "whoami") == 0) {
+      printf("WangLiang 202110260126\n");  
+    } else if (strcmp(command, "exit") == 0) {
+      break;
+    } else {
+      printf("invalid command\n");
+    }
+  }
   }
 
   /* Finish up. */

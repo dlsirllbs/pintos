@@ -172,6 +172,23 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+  // ALARM CLOCK
+  /* check sleep list and global tick find any threads to wake up and,
+  move them to the ready list if naccessary,
+  update the global tick */
+  if (ticks >= global_ticks){
+    for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);
+         e = list_next (e))
+    {
+      struct thread *t;
+      t = list_entry(e, struct thread, elem);
+      
+      if (global_ticks >= t -> wakeup_ticks){
+	      thread_unblock(t);	
+      }
+    }
+  update_global_ticks();
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
