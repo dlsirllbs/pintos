@@ -90,6 +90,11 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
     int64_t wakeup_ticks;                /* tick till wake up */
+    int base_priority;                    /* priority stays the same till finish */
+    struct lock* waiting_on_lock;           /* the lock that this thread is waiting */
+    struct list donations;               /* list of donors */
+    struct list_elem d_elem;             /* List element for donor threads list. */
+
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
@@ -142,5 +147,9 @@ int thread_get_load_avg (void);
 //ALARM CLOCK
 struct list sleep_list;
 int64_t global_ticks;
+
+//PRIORITY
+bool cmp_priority(struct list_elem * a, struct list_elem * b);
+void thread_check_preemption();
 
 #endif /* threads/thread.h */
